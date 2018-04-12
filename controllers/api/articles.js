@@ -101,7 +101,7 @@ router.delete('/:id', function(req, res) {
 
 // scrape articles
 router.get('/scrape', function(req, res, next) {
-    request("https://www.nba.com", function(error, response, html) {
+    request("https://www.bleacherreport.com", function(error, response, html) {
         let $ = cheerio.load(html);
         let results = [];
         $('tr.athing td.title').each(function(i, e) {
