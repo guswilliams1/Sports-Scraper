@@ -1,48 +1,41 @@
+//dependencies
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var logger = require('morgan');
 
-const express = require('express'),
-      exphbs = require('express-handlebars'),
-      bodyParser = require('body-parser'),
-      logger = require('morgan'),
-      mongoose = require('mongoose'),
-      methodOverride = require('method-override');
+//initialize Express app
+var express = require('express');
+var app = express();
 
+app.use(logger('dev'));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 
-const PORT = process.env.PORT || 3000;
-let app = express();
+app.use(express.static(process.cwd() + '/public'));
 
-app
-    .use(bodyParser.json())
-    .use(bodyParser.urlencoded({ extended:true }))
-    .use(bodyParser.text())
-    .use(bodyParser.json({ type: 'application/vnd.api+json' }))
-    .use(methodOverride('_method'))
-    .use(logger('dev'))
-    .use(express.static(__dirname + '/public'))
-    .engine('handlebars', exphbs({ defaultLayout: 'main' }))
-    .set('view engine', 'handlebars')
-    .use(require('./controllers'));
+var exphbs = require('express-handlebars');
+app.engine('handlebars', exphbs({
+  defaultLayout: 'main'
+}));
+app.set('view engine', 'handlebars');
 
+//connecting to MongoDB
+mongoose.connect('mongodb://heroku_jxkjhg1v:6s68tem51mlionrj2sneb7b53c@ds127988.mlab.com:27988/heroku_jxkjhg1v');
 
-mongoose.Promise = Promise;
-
-const dbURI = process.env.MONGODB_URI || "mongodb://localhost:27017/news";
+//mongoose.connect('mongodb://localhost/scraped_news');
 
 
-mongoose.connect(dbURI);
-
-const db = mongoose.connection;
-
-db.on("error", function(error) {
-    console.log("Mongoose Error: ", error);
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('Connected to Mongoose!')
 });
 
+var routes = require('./controller/controller.js');
+app.use('/', routes);
 
-db.once("open", function() {
-    console.log("Mongoose connection successful.");
-    
-    app.listen(PORT, function() {
-        console.log("App running on port" + PORT);
-    });
+var port = process.env.PORT || 3000;
+app.listen(port, function(){
+  console.log('Listening on PORT ' + port);
 });
-
-module.exports = app;
